@@ -21,4 +21,12 @@
     <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
     <PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Resources\ROM\Tetris.gb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\ROM\Tetris.sav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

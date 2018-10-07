@@ -104,9 +104,9 @@ namespace Emux.OpenTK.Emux
             DeviceUnloaded?.Invoke(this, e);
         }
 
-        private static Color ConvertColor(Color4 color)
+        private static Color ConvertColor(Color color)
         {
-            return new Color((byte)color.R, (byte)color.G, (byte)color.B);
+            return color;
         }
 
         private void ApplyColorPalettes()
