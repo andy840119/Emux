@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup Label="Project References">
     <ProjectReference Include="..\Emux.GameBoy\Emux.GameBoy.csproj" />
+    <ProjectReference Include="..\Emux.NAudio\Emux.NAudio.csproj" />
   </ItemGroup>
   <ItemGroup Label="Package References">
     <PackageReference Include="ppy.osu.Framework" Version="2018.1002.0" />

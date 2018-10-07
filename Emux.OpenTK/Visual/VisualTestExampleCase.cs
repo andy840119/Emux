@@ -6,9 +6,9 @@ using OpenTK.Graphics;
 namespace Emux.OpenTK.Visual
 {
     [TestFixture]
-    public class ExampleVisualTestCase : TestCase
+    public class VisualTestExampleCase : TestCase
     {
-        public ExampleVisualTestCase()
+        public VisualTestExampleCase()
         {
             //open panel
             AddStep("Test case Step", ()=> Add(new Box
