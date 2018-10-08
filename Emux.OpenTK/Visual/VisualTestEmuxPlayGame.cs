@@ -91,14 +91,12 @@ namespace Emux.OpenTK.Visual
 
         private GameBoy.GameBoy _currentDevice;
         private StreamedExternalMemory _currentExternalMemory;
-        private readonly GameBoyTicker _ticker;
 
         private readonly EmuxGameContainer _displayScreen;
 
         public GameBoyContainer()
         {
             //Initial Ui
-            Add(_ticker = new GameBoyTicker());
             AddInternal(_displayScreen = new EmuxGameContainer
             {
                 Width = 160 * 4,
@@ -168,9 +166,17 @@ namespace Emux.OpenTK.Visual
             _currentExternalMemory = new StreamedExternalMemory(File.Open(ramFilePath, FileMode.OpenOrCreate));
             var cartridge = new EmulatedCartridge(File.ReadAllBytes(romFilePath), _currentExternalMemory);
             _currentExternalMemory.SetBufferSize(cartridge.ExternalRamSize);
-            CurrentDevice = new GameBoy.GameBoy(cartridge, _ticker, !Settings.ForceOriginalGameBoy);
+            CurrentDevice = new GameBoy.GameBoy(cartridge, RecreateTicker(), !Settings.ForceOriginalGameBoy);
             ApplyColorPalettes();
             OnDeviceLoaded(new DeviceEventArgs(CurrentDevice));
+        }
+
+        GameBoyTicker RecreateTicker()
+        {
+            RemoveAll(x => x is GameBoyTicker);
+            var ticker = new GameBoyTicker();
+            Add(ticker);
+            return ticker;
         }
 
         protected override void Dispose(bool isDisposing)
