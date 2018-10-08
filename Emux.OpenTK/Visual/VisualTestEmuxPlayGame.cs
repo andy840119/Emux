@@ -39,8 +39,7 @@ namespace Emux.OpenTK.Visual
             AddStep("Load game", () =>
             {
                 string romPath = "Resources/ROM/Tetris.gb";
-                GameBoyContainer.DeviceManager.LoadDevice(romPath, Path.ChangeExtension(romPath, ".sav"));
-                GameBoyContainer.OnDeviceChanged();
+                GameBoyContainer.LoadDevice(romPath, Path.ChangeExtension(romPath, ".sav"));
             });
 
             //run game
@@ -82,42 +81,9 @@ namespace Emux.OpenTK.Visual
                 GameBoyContainer.CurrentDevice.Cpu.ClearBreakpoints();
             });
         }
-
-        protected override void Dispose(bool isDisposing)
-        {
-            //unload device
-            GameBoyContainer.DeviceManager.UnloadDevice();
-            base.Dispose(isDisposing);
-        }
     }
 
     public class GameBoyContainer : Container
-    {
-        private readonly DeviceManager _deviceManager;
-        private GameBoy.GameBoy _currentDevice;
-        private readonly EmuxGameContainer _displayScreen;
-
-        public GameBoy.GameBoy CurrentDevice => _currentDevice;
-        public DeviceManager DeviceManager => _deviceManager;
-
-        public GameBoyContainer()
-        {
-            Add(_deviceManager = new DeviceManager());
-            Add(_displayScreen = new EmuxGameContainer
-            {
-                Width = 160 * 4,
-                Height = 144 * 4
-            });
-        }
-
-        public void OnDeviceChanged()
-        {
-            _currentDevice = _deviceManager.CurrentDevice;
-            _currentDevice.Gpu.VideoOutput = _displayScreen;
-        }
-    }
-
-    public class DeviceManager : Container
     {
         public event EventHandler<DeviceEventArgs> DeviceLoaded;
         public event EventHandler<DeviceEventArgs> DeviceUnloaded;
@@ -127,17 +93,24 @@ namespace Emux.OpenTK.Visual
         private StreamedExternalMemory _currentExternalMemory;
         private readonly GameBoyTicker _ticker;
 
-        public DeviceManager()
+        private readonly EmuxGameContainer _displayScreen;
+
+        public GameBoyContainer()
         {
+            //Initial Ui
             Add(_ticker = new GameBoyTicker());
+            AddInternal(_displayScreen = new EmuxGameContainer
+            {
+                Width = 160 * 4,
+                Height = 144 * 4
+            });
+
             AudioMixer = new GameBoyNAudioMixer();
             var player = new DirectSoundOut();
             player.Init(AudioMixer);
             player.Play();
 
             GamesharkController = new GamesharkController();
-            //Properties.Settings.Default.PropertyChanged += SettingsOnPropertyChanged;//andy840119 : 
-
             Breakpoints = new Dictionary<ushort, BreakpointInfo>();
         }
 
@@ -158,6 +131,9 @@ namespace Emux.OpenTK.Visual
                     {
                         AudioMixer.Connect(value.Spu);
                         GamesharkController.Device = value;
+
+                        //Connect output
+                        _currentDevice.Gpu.VideoOutput = _displayScreen;
                     }
                     OnDeviceChanged();
                 }
@@ -197,6 +173,13 @@ namespace Emux.OpenTK.Visual
             OnDeviceLoaded(new DeviceEventArgs(CurrentDevice));
         }
 
+        protected override void Dispose(bool isDisposing)
+        {
+            //unload device
+            UnloadDevice();
+            base.Dispose(isDisposing);
+        }
+
         protected virtual void OnDeviceChanged()
         {
             DeviceChanged?.Invoke(this, EventArgs.Empty);
@@ -226,12 +209,6 @@ namespace Emux.OpenTK.Visual
                 CurrentDevice.Gpu.Color2 = ConvertColor(Settings.GBColor2);
                 CurrentDevice.Gpu.Color3 = ConvertColor(Settings.GBColor3);
             }
-        }
-
-        private void SettingsOnPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName.Contains("GBColor"))
-                ApplyColorPalettes();
         }
     }
 
