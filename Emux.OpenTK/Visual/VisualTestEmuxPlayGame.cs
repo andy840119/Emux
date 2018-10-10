@@ -24,18 +24,33 @@ using OpenTK;
 using osu.Framework.Input.Bindings;
 using osu.Framework.Input.Events;
 using OpenTK.Input;
+using osu.Framework.Graphics.Cursor;
+using Emux.GameBoy.Input;
 
 namespace Emux.OpenTK.Visual
 {
     [TestFixture]
     public class VisualTestEmuxPlayGame : TestCase
     {
+        private readonly Container testContainer;
         public GameBoyContainer GameBoyContainer;
+
         public VisualTestEmuxPlayGame()
         {
-            Add(GameBoyContainer = new GameBoyContainer
+            CursorContainer cursor = new CursorContainer();
+            Add(cursor);
+
+            TooltipContainer ttc;
+            Add(ttc = new TooltipContainer(cursor)
             {
-                Scale = new Vector2(1.0f)
+                RelativeSizeAxes = Axes.Both,
+                Children = new Drawable[]
+                {
+                    GameBoyContainer = new GameBoyContainer
+                    {
+                        Scale = new Vector2(1.0f)
+                    }
+                }
             });
 
             InitialTestStep();
@@ -100,7 +115,6 @@ namespace Emux.OpenTK.Visual
         private GameBoy.GameBoy _currentDevice;
         private StreamedExternalMemory _currentExternalMemory;
         private readonly GameBoyScreen _displayScreen;
-
         private readonly Circle _powerLed;
 
         #region UI
@@ -111,7 +125,15 @@ namespace Emux.OpenTK.Visual
 
         protected virtual Color4 DisplayBackgroundColor => new Color4(82,82,94,255);
 
-        protected virtual Color4 DisplayScreenColor => new Color4(81,98,23,255);
+        protected virtual Color4 DisplayScreenColor => DisplayScreenColor1;//Screen off color
+
+        protected virtual Color4 DisplayScreenColor0 => new Color4(224, 248, 208,255);
+
+        protected virtual Color4 DisplayScreenColor1 => new Color4( 136, 192, 112,255);
+
+        protected virtual Color4 DisplayScreenColor2 => new Color4( 52, 104,86,255);
+
+        protected virtual Color4 DisplayScreenColor3 => new Color4( 8, 24, 32,255);
 
         protected virtual Color4 DisplayTextColor => Color4.White;
 
@@ -139,6 +161,25 @@ namespace Emux.OpenTK.Visual
 
         protected virtual Color4 OptionButtonPressedColor => new Color4(78,77,81,255);
 
+        #endregion
+
+        #region Keys
+
+        protected virtual Key UpKey => Key.Up;
+
+        protected virtual Key DownKey => Key.Down;
+
+        protected virtual Key LeftKey => Key.Left;
+
+        protected virtual Key RightKey => Key.Right;
+
+        protected virtual Key AKey => Key.Z;
+
+        protected virtual Key BKey => Key.X;
+
+        protected virtual Key OptionKey => Key.ShiftLeft;
+
+        protected virtual Key StartKey => Key.Enter;
         #endregion
 
         public GameBoyContainer()
@@ -346,10 +387,10 @@ namespace Emux.OpenTK.Visual
                                     new Box
                                     {
                                         Name = "Screen Background",
-                                        Colour = DisplayScreenColor,
+                                        Colour = Color4.Black,
                                         Origin = Anchor.Centre,
-                                        Width = 160 * 0.9f,
-                                        Height = 144 * 0.9f,
+                                        Width = 160 * 0.91f,
+                                        Height = 144 * 0.91f,
                                     },
                                     _displayScreen = new GameBoyScreen
                                     {
@@ -357,6 +398,7 @@ namespace Emux.OpenTK.Visual
                                         Origin = Anchor.Centre,
                                         Width = 160 * 0.9f,
                                         Height = 144 * 0.9f,
+                                        ScreenColor = DisplayScreenColor,
                                     }
                                 }
                             },
@@ -375,9 +417,32 @@ namespace Emux.OpenTK.Visual
                             new GameboyDPad(DPadButtonBackgroundColor)
                             {
                                 Name = "Gamepad",
+                                ButtonColor = DPadButtonColor,
+                                ButtonPressedColor = DPadButtonPressedColor,
+                                UpButtonKey = UpKey,
+                                DownButtonKey = DownKey,
+                                LeftButtonKey = LeftKey,
+                                RightButtonKey = RightKey,
+                                KeyPressedEvent = (direction,press ) =>{ 
+                                    switch(direction)
+                                    {
+                                        case GameboyDPad.DPadDirection.Up :
+                                            ButtonPressChanged(GameBoyPadButton.Up,press);
+                                        break;
+                                        case GameboyDPad.DPadDirection.Down :
+                                            ButtonPressChanged(GameBoyPadButton.Down,press);
+                                        break;
+                                        case GameboyDPad.DPadDirection.Left :
+                                            ButtonPressChanged(GameBoyPadButton.Left,press);
+                                        break;
+                                        case GameboyDPad.DPadDirection.Right :
+                                            ButtonPressChanged(GameBoyPadButton.Right,press);
+                                        break;
+                                    }
+                                },
                                 Width = 70,
                                 Height = 70,
-                                Y = -10
+                                Y = -10,
                             },
                             new GameboyButton
                             {
@@ -386,11 +451,13 @@ namespace Emux.OpenTK.Visual
                                 TextColor = TextColor,
                                 ButtonColor = ABButtonColor,
                                 ButtonPressedColor = ABButtonPressedColor,
+                                ButtonKey = AKey,
+                                KeyPressedEvent = (press)=> ButtonPressChanged(GameBoyPadButton.A,press),
                                 Width = 35,
                                 Height = 35,
                                 Anchor = Anchor.TopRight,
                                 Origin = Anchor.CentreRight,
-                                Rotation = -30,
+                                Rotation = -30
                             },
                             new GameboyButton
                             {
@@ -399,13 +466,15 @@ namespace Emux.OpenTK.Visual
                                 TextColor = TextColor,
                                 ButtonColor = ABButtonColor,
                                 ButtonPressedColor = ABButtonPressedColor,
+                                ButtonKey = BKey,
+                                KeyPressedEvent = (press)=> ButtonPressChanged(GameBoyPadButton.B,press),
                                 Width = 35,
                                 Height = 35,
                                 Anchor = Anchor.TopRight,
                                 Origin = Anchor.CentreRight,
                                 X = -45,
                                 Y = 25,
-                                Rotation = -30,
+                                Rotation = -30
                             },
                             new GameboyButton
                             {
@@ -414,6 +483,8 @@ namespace Emux.OpenTK.Visual
                                 TextColor = TextColor,
                                 ButtonColor = OptionButtonColor,
                                 ButtonPressedColor = OptionButtonPressedColor,
+                                ButtonKey = OptionKey,
+                                KeyPressedEvent = (press)=> ButtonPressChanged(GameBoyPadButton.Select,press),
                                 Width = 33,
                                 Height = 10,
                                 Anchor = Anchor.BottomCentre,
@@ -428,6 +499,8 @@ namespace Emux.OpenTK.Visual
                                 TextColor = TextColor,
                                 ButtonColor = OptionButtonColor,
                                 ButtonPressedColor = OptionButtonPressedColor,
+                                ButtonKey = StartKey,
+                                KeyPressedEvent = (press)=> ButtonPressChanged(GameBoyPadButton.Start,press),
                                 Width = 33,
                                 Height = 10,
                                 Anchor = Anchor.BottomCentre,
@@ -439,6 +512,8 @@ namespace Emux.OpenTK.Visual
                     }
                 }
             });
+
+            _displayScreen.ScreenOff();
 
             AudioMixer = new GameBoyNAudioMixer();
             var player = new DirectSoundOut();
@@ -493,6 +568,7 @@ namespace Emux.OpenTK.Visual
                 device.Terminate();
                 _currentExternalMemory.Dispose();
                 _currentDevice = null;
+                _displayScreen.ScreenOff();
                 OnDeviceUnloaded(new DeviceEventArgs(device));
             }
         }
@@ -540,36 +616,63 @@ namespace Emux.OpenTK.Visual
             DeviceUnloaded?.Invoke(this, e);
         }
 
-        private static Color ConvertColor(Color color)
+        private static Color ConvertColor(Color4 color)
         {
-            return color;
+            return new Color
+            {
+                R = (byte)(color.R * 255),
+                G = (byte)(color.G * 255),
+                B = (byte)(color.B * 255)
+            };
         }
 
         private void ApplyColorPalettes()
         {
             if (CurrentDevice != null)
             {
-                CurrentDevice.Gpu.Color0 = ConvertColor(Settings.GBColor0);
-                CurrentDevice.Gpu.Color1 = ConvertColor(Settings.GBColor1);
-                CurrentDevice.Gpu.Color2 = ConvertColor(Settings.GBColor2);
-                CurrentDevice.Gpu.Color3 = ConvertColor(Settings.GBColor3);
+                CurrentDevice.Gpu.Color0 = ConvertColor(DisplayScreenColor0);
+                CurrentDevice.Gpu.Color1 = ConvertColor(DisplayScreenColor1);
+                CurrentDevice.Gpu.Color2 = ConvertColor(DisplayScreenColor2);
+                CurrentDevice.Gpu.Color3 = ConvertColor(DisplayScreenColor3);
+            }
+        }
+
+        private void ButtonPressChanged(GameBoyPadButton button,bool press)
+        {
+            if(press)
+            {
+                CurrentDevice.KeyPad.PressedButtons |= button;
+            }
+            else
+            {
+                CurrentDevice.KeyPad.PressedButtons &= ~button;
             }
         }
     }
 
     public class GameboyDPad : Container
     {
-        public readonly Triangle _upButton;
+        private readonly Triangle _upButton;
 
-        public readonly Triangle _downButton;
+        private readonly Triangle _downButton;
 
-        public readonly Triangle _leftButton;
+        private readonly Triangle _leftButton;
 
-        public readonly Triangle _rightButton;
+        private readonly Triangle _rightButton;
 
         public Color4 ButtonColor{get;set;}
 
         public Color4 ButtonPressedColor{get;set;}
+
+        public Key UpButtonKey{get;set;}
+
+        public Key DownButtonKey{get;set;}
+
+        public Key LeftButtonKey{get;set;}
+
+        public Key RightButtonKey{get;set;}
+
+        public Action<DPadDirection,bool> KeyPressedEvent;
 
         public GameboyDPad(Color4 backgroundColor)
         {
@@ -582,7 +685,7 @@ namespace Emux.OpenTK.Visual
                     CornerRadius = 3,
                     RelativeSizeAxes = Axes.Both,
                     FillMode = FillMode.Fit,
-                    FillAspectRatio = 0.3f,
+                    FillAspectRatio = 0.37f,
                     Anchor = Anchor.Centre,
                     Origin = Anchor.Centre,
                     Child = new Box
@@ -598,7 +701,7 @@ namespace Emux.OpenTK.Visual
                     CornerRadius = 3,
                     RelativeSizeAxes = Axes.Both,
                     FillMode = FillMode.Fit,
-                    FillAspectRatio = 3f,
+                    FillAspectRatio = 2.7f,
                     Anchor = Anchor.Centre,
                     Origin = Anchor.Centre,
                     Child = new Box
@@ -658,9 +761,105 @@ namespace Emux.OpenTK.Visual
                 }
             };
         }
+
+        protected override void LoadComplete()
+        {
+            _upButton.Colour = ButtonColor;
+            _downButton.Colour = ButtonColor;
+            _leftButton.Colour = ButtonColor;
+            _rightButton.Colour = ButtonColor;
+            base.LoadComplete();
+        }
+
+        protected override bool OnKeyDown(KeyDownEvent e)
+        {
+            var downKey = GetDPadDirection(e.Key);
+
+            if(downKey!=null)
+            {
+                ChangeKeypadColor(downKey.Value,true);
+                KeyPressedEvent?.Invoke(downKey.Value,true);
+            }
+            
+            return base.OnKeyDown(e);
+        }
+
+        protected override bool OnKeyUp(KeyUpEvent e)
+        {
+            var upKey = GetDPadDirection(e.Key);
+
+            if(upKey!=null)
+            {
+                ChangeKeypadColor(upKey.Value,false);
+                KeyPressedEvent?.Invoke(upKey.Value,false);
+            }
+
+            return base.OnKeyUp(e);
+        }
+        
+        protected override bool OnMouseDown(MouseDownEvent e)
+        {
+            return base.OnMouseDown(e);
+        }
+
+        protected override bool OnMouseUp(MouseUpEvent e)
+        {
+            return base.OnMouseUp(e);
+        }
+
+        protected virtual DPadDirection? GetDPadDirection(Key key)
+        {
+            if(key == UpButtonKey)
+                return DPadDirection.Up;
+            else if(key == DownButtonKey)
+                return DPadDirection.Down;
+            else if(key == LeftButtonKey)
+                return DPadDirection.Left;
+            else if(key == RightButtonKey)
+                return DPadDirection.Right;
+            else
+                return null;
+        }
+
+        protected virtual DPadDirection? GetDPadDirection(Vector2 mouseLocalPosition)
+        {
+            //TODO : implement
+            return null;
+        }
+
+        protected virtual void ChangeKeypadColor(DPadDirection direction,bool press)
+        {
+            var buttonColor = press ? ButtonPressedColor : ButtonColor; 
+            switch(direction)
+            {
+                case DPadDirection.Up:
+                    _upButton.Colour = buttonColor;
+                    break;
+                case DPadDirection.Down:
+                    _downButton.Colour = buttonColor;
+                break;
+                case DPadDirection.Left:
+                    _leftButton.Colour = buttonColor;
+                break;
+                case DPadDirection.Right:
+                    _rightButton.Colour = buttonColor;
+                break;
+            }
+        }
+
+        public enum DPadDirection
+        {
+            Up,
+
+            Down,
+
+            Left,
+
+            Right,
+        }
     }
 
-    public class GameboyButton : Container
+    public class GameboyButton : Container , IHasTooltip
     {
         private readonly Circle _circle;
 
@@ -683,6 +882,8 @@ namespace Emux.OpenTK.Visual
             get=>_spriteText.Colour;
             set=> _spriteText.Colour = value;
         }
+
+        public string TooltipText => ButtonKey.ToString();
 
         public Action<bool> KeyPressedEvent;
 
@@ -707,13 +908,14 @@ namespace Emux.OpenTK.Visual
         protected override void LoadComplete()
         {
             _circle.Colour = ButtonColor;
+            base.LoadComplete();
         }
 
         protected override bool OnKeyDown(KeyDownEvent e)
         {
             if(e.Key == ButtonKey)
             {
-                _circle.Colour = ButtonColor;
+                _circle.Colour = ButtonPressedColor;
                 KeyPressedEvent?.Invoke(true);
             }
             return base.OnKeyDown(e);
@@ -731,11 +933,15 @@ namespace Emux.OpenTK.Visual
         
         protected override bool OnMouseDown(MouseDownEvent e)
         {
+            _circle.Colour = ButtonPressedColor;
+            KeyPressedEvent?.Invoke(true);
             return base.OnMouseDown(e);
         }
 
         protected override bool OnMouseUp(MouseUpEvent e)
         {
+            _circle.Colour = ButtonColor;
+            KeyPressedEvent?.Invoke(false);
             return base.OnMouseUp(e);
         }
     }
@@ -792,9 +998,29 @@ namespace Emux.OpenTK.Visual
 
     public class GameBoyScreen : Sprite, IVideoOutput
     {
+        public Color4 ScreenColor{get;set;}
+
         public GameBoyScreen()
         {
             Texture = new Texture(160, 144);
+        }
+
+        public void ScreenOff()
+        {
+            var rByte = (byte)(ScreenColor.R * 255);
+            var gByte = (byte)(ScreenColor.G * 255);
+            var bByte = (byte)(ScreenColor.B * 255);
+            var rawData = new byte[160 * 144 * sizeof(int)];
+
+            for (int i = 0; i < rawData.Length; i += 4)
+            {
+                rawData[i] = rByte;
+                rawData[i + 1] = gByte;
+                rawData[i + 2] = bByte;
+                rawData[i + 3] = 255;
+            }
+            var image = SixLabors.ImageSharp.Image.LoadPixelData<Rgba32>(rawData, 160, 144);
+            Texture.SetData(new TextureUpload(image));
         }
 
         public void RenderFrame(byte[] pixelData)
@@ -808,7 +1034,6 @@ namespace Emux.OpenTK.Visual
                 rawData[i + 2] = pixelData[j + 2];
                 rawData[i + 3] = 255;
             }
-
             var image = SixLabors.ImageSharp.Image.LoadPixelData<Rgba32>(rawData, 160, 144);
             Texture.SetData(new TextureUpload(image));
         }
