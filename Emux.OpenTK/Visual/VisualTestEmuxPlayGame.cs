@@ -21,6 +21,9 @@ using SixLabors.ImageSharp.PixelFormats;
 using IClock = Emux.GameBoy.Cpu.IClock;
 using osu.Framework.Graphics;
 using OpenTK;
+using osu.Framework.Input.Bindings;
+using osu.Framework.Input.Events;
+using OpenTK.Input;
 
 namespace Emux.OpenTK.Visual
 {
@@ -122,6 +125,20 @@ namespace Emux.OpenTK.Visual
 
         protected virtual Color4 TextColor => new Color4(13,24,124,255);
 
+        protected virtual Color4 DPadButtonBackgroundColor => new Color4(10,12,24,255);
+
+        protected virtual Color4 DPadButtonColor => new Color4(10,12,24,255);
+
+        protected virtual Color4 DPadButtonPressedColor => new Color4(34,41,83,255);
+
+        protected virtual Color4 ABButtonColor => new Color4(154,31,85,255);
+
+        protected virtual Color4 ABButtonPressedColor => new Color4(109,22,62,255);
+
+        protected virtual Color4 OptionButtonColor => new Color4(112,111,119,255);
+
+        protected virtual Color4 OptionButtonPressedColor => new Color4(78,77,81,255);
+
         #endregion
 
         public GameBoyContainer()
@@ -215,10 +232,10 @@ namespace Emux.OpenTK.Visual
                                 Name = "Speaker",
                                 Width = 100,
                                 Height = 40,
-                                Spacing = new Vector2(10),
+                                Spacing = new Vector2(8),
                                 Anchor = Anchor.BottomRight,
                                 Origin = Anchor.BottomRight,
-                                X = 25,
+                                X = 20,
                                 Y = -60,
                                 Rotation = -30
                             },
@@ -345,6 +362,81 @@ namespace Emux.OpenTK.Visual
                             },
                         }
                     },
+                    new Container
+                    {
+                        Name = "Button area",
+                        Width = 230,
+                        Height = 100,
+                        Anchor = Anchor.TopCentre,
+                        Origin = Anchor.TopCentre,
+                        Y = 280,
+                        Children = new Drawable[]
+                        {
+                            new GameboyDPad(DPadButtonBackgroundColor)
+                            {
+                                Name = "Gamepad",
+                                Width = 70,
+                                Height = 70,
+                                Y = -10
+                            },
+                            new GameboyButton
+                            {
+                                Name = "A Button",
+                                ButtonText = "A",
+                                TextColor = TextColor,
+                                ButtonColor = ABButtonColor,
+                                ButtonPressedColor = ABButtonPressedColor,
+                                Width = 35,
+                                Height = 35,
+                                Anchor = Anchor.TopRight,
+                                Origin = Anchor.CentreRight,
+                                Rotation = -30,
+                            },
+                            new GameboyButton
+                            {
+                                Name = "B Button",
+                                ButtonText = "B",
+                                TextColor = TextColor,
+                                ButtonColor = ABButtonColor,
+                                ButtonPressedColor = ABButtonPressedColor,
+                                Width = 35,
+                                Height = 35,
+                                Anchor = Anchor.TopRight,
+                                Origin = Anchor.CentreRight,
+                                X = -45,
+                                Y = 25,
+                                Rotation = -30,
+                            },
+                            new GameboyButton
+                            {
+                                Name = "Select Button",
+                                ButtonText = "SELECT",
+                                TextColor = TextColor,
+                                ButtonColor = OptionButtonColor,
+                                ButtonPressedColor = OptionButtonPressedColor,
+                                Width = 33,
+                                Height = 10,
+                                Anchor = Anchor.BottomCentre,
+                                Origin = Anchor.BottomCentre,
+                                Rotation = -30,
+                                X = -20,
+                            },
+                            new GameboyButton
+                            {
+                                Name = "Start Button",
+                                ButtonText = "START",
+                                TextColor = TextColor,
+                                ButtonColor = OptionButtonColor,
+                                ButtonPressedColor = OptionButtonPressedColor,
+                                Width = 33,
+                                Height = 10,
+                                Anchor = Anchor.BottomCentre,
+                                Origin = Anchor.BottomCentre,
+                                Rotation = -30,
+                                X = 20,
+                            }
+                        }
+                    }
                 }
             });
 
@@ -465,11 +557,194 @@ namespace Emux.OpenTK.Visual
         }
     }
 
+    public class GameboyDPad : Container
+    {
+        public readonly Triangle _upButton;
+
+        public readonly Triangle _downButton;
+
+        public readonly Triangle _leftButton;
+
+        public readonly Triangle _rightButton;
+
+        public Color4 ButtonColor{get;set;}
+
+        public Color4 ButtonPressedColor{get;set;}
+
+        public GameboyDPad(Color4 backgroundColor)
+        {
+            Children = new Drawable[]
+            {
+                new Container
+                {
+                    Name = "Background",
+                    Masking = true,
+                    CornerRadius = 3,
+                    RelativeSizeAxes = Axes.Both,
+                    FillMode = FillMode.Fit,
+                    FillAspectRatio = 0.3f,
+                    Anchor = Anchor.Centre,
+                    Origin = Anchor.Centre,
+                    Child = new Box
+                    {
+                        RelativeSizeAxes = Axes.Both,
+                        Colour = backgroundColor
+                    }
+                },
+                new Container
+                {
+                    Name = "Background",
+                    Masking = true,
+                    CornerRadius = 3,
+                    RelativeSizeAxes = Axes.Both,
+                    FillMode = FillMode.Fit,
+                    FillAspectRatio = 3f,
+                    Anchor = Anchor.Centre,
+                    Origin = Anchor.Centre,
+                    Child = new Box
+                    {
+                        RelativeSizeAxes = Axes.Both,
+                        Colour = backgroundColor
+                    }
+                },
+                new Container
+                {
+                    RelativeSizeAxes = Axes.Both,
+                    Padding = new MarginPadding(10),
+                    Anchor = Anchor.Centre,
+                    Origin = Anchor.Centre,
+                    Children = new Drawable[]
+                    {
+                        _upButton = new Triangle
+                        {
+                            Name = "Up",
+                            Width = 10,
+                            Height = 10,
+                            Colour = Color4.Black,
+                            Anchor = Anchor.TopCentre,
+                            Origin = Anchor.Centre,
+                        },
+                        _downButton = new Triangle
+                        {
+                            Name = "Down",
+                            Width = 10,
+                            Height = 10,
+                            Colour = Color4.Black,
+                            Anchor = Anchor.BottomCentre,
+                            Origin = Anchor.Centre,
+                            Rotation = 180
+                        },
+                        _leftButton = new Triangle
+                        {
+                            Name = "Left",
+                            Width = 10,
+                            Height = 10,
+                            Colour = Color4.Black,
+                            Anchor = Anchor.CentreLeft,
+                            Origin = Anchor.Centre,
+                            Rotation = 270
+                        },
+                        _rightButton = new Triangle
+                        {
+                            Name = "Right",
+                            Width = 10,
+                            Height = 10,
+                            Colour = Color4.Black,
+                            Anchor = Anchor.CentreRight,
+                            Origin = Anchor.Centre,
+                            Rotation = 90
+                        }
+                    }
+                }
+            };
+        }
+    }
+
+    public class GameboyButton : Container
+    {
+        private readonly Circle _circle;
+
+        private readonly SpriteText _spriteText;
+
+        public string ButtonText
+        {
+            get=>_spriteText.Text;
+            set => _spriteText.Text = value;
+        }
+
+        public Key ButtonKey{get;set;}
+
+        public Color4 ButtonColor{get;set;}
+
+        public Color4 ButtonPressedColor{get;set;}
+
+        public Color4 TextColor
+        {
+            get=>_spriteText.Colour;
+            set=> _spriteText.Colour = value;
+        }
+
+        public Action<bool> KeyPressedEvent;
+
+        public GameboyButton()
+        {
+            Children = new Drawable[]
+            {
+                _circle = new Circle()
+                {
+                    RelativeSizeAxes = Axes.Both
+                },
+                _spriteText = new SpriteText
+                {
+                    TextSize = 15,
+                    Anchor = Anchor.BottomCentre,
+                    Origin = Anchor.TopCentre,
+                    Y = 5
+                }
+            };
+        }
+
+        protected override void LoadComplete()
+        {
+            _circle.Colour = ButtonColor;
+        }
+
+        protected override bool OnKeyDown(KeyDownEvent e)
+        {
+            if(e.Key == ButtonKey)
+            {
+                _circle.Colour = ButtonColor;
+                KeyPressedEvent?.Invoke(true);
+            }
+            return base.OnKeyDown(e);
+        }
+
+        protected override bool OnKeyUp(KeyUpEvent e)
+        {
+            if(e.Key == ButtonKey)
+            {
+                _circle.Colour = ButtonColor;
+                KeyPressedEvent?.Invoke(false);
+            }
+            return base.OnKeyUp(e);
+        }
+        
+        protected override bool OnMouseDown(MouseDownEvent e)
+        {
+            return base.OnMouseDown(e);
+        }
+
+        protected override bool OnMouseUp(MouseUpEvent e)
+        {
+            return base.OnMouseUp(e);
+        }
+    }
+
     public class GameboySpeaker : FillFlowContainer
     {
         public GameboySpeaker(Color4 speakerColor,float speakerWidth)
         {
-            for(int i=0;i<5;i++)
+            for(int i=0;i<6;i++)
             {
                 this.Add(new Box
                 {
